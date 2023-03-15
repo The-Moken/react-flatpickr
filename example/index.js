@@ -11,7 +11,13 @@ class App extends Component {
     v: '2016-01-01 01:01',
     onChange: (_, str) => {
       console.info(str)
-    }
+    },
+    range: [new Date()],
+    startDate: new Date(),
+    endDate: new Date(),
+    handler: (dates => {
+      console.log('initial handler', dates)
+    })
   }
 
   componentDidMount() {
@@ -26,23 +32,52 @@ class App extends Component {
   }
 
   render() {
-    const { v } = this.state
+    const { v, startDate, endDate, range } = this.state
+
+    const sharedOptions = {
+      enableTime: true,
+    }
 
     return (
       <main>
         <Flatpickr data-enable-time className='test'
           onChange={[
-            (_, str) => console.info(str),
-            () => {} // test hookPropType
-          ]} />
+            (_, str) => { console.info('First prop handler', str) },
+            (_, str) => { console.info('Second prop handler', str) },
+          ]}
+          options={{
+            onChange: [
+              (_, str) => { console.info('First options handler', str) },
+              (_, str) => { console.info('Second options handler', str) },
+            ]
+          }}
+        />
         <Flatpickr data-enable-time defaultValue='2016-11-11 11:11'
-          onChange={(_, str) => console.info(str)} />
+          onChange={this.state.handler} />
+        <button type="button"
+          onClick={() => {
+            this.setState(state => ({
+              ...state,
+              handler: (dates) => {
+                console.log('new handler', dates)
+              }
+            }))
+          }}
+        >
+          Change handler
+        </button>
         <Flatpickr data-enable-time value={v}
           onChange={(_, str) => console.info(str)} />
         <Flatpickr value={v} options={{minDate: '2016-11-01'}}
           onChange={(_, str) => console.info(str)} />
-        <Flatpickr value={[v, '2016-01-10']} options={{mode: 'range'}}
-          onChange={(_, str) => console.info(str)} />
+        <Flatpickr value={range} options={{mode: 'range'}}
+          onChange={(dates, str) => {
+            this.setState(state => ({
+              ...state,
+              range: dates,
+            }))
+            console.info('range changed', dates, str)}
+          } />
         <Flatpickr onChange={this.state.onChange}
           onOpen={() => { console.info('opened (by prop)') }}
           options={{
@@ -72,6 +107,31 @@ class App extends Component {
               </div>
             )
           }} />
+
+      <div>
+        <h2>Shared</h2>
+        <Flatpickr
+          value={startDate} options={sharedOptions} onChange={(date) => {
+            this.setState(state => ({
+              ...state,
+              startDate: date,
+            }))
+          }} />
+        <Flatpickr
+          value={endDate} options={sharedOptions} onChange={(date) => {
+            this.setState(state => ({
+              ...state,
+              endDate: date,
+            }))
+          }} />
+
+        <dl>
+          <dt>Start</dt>
+          <dd>{startDate?.toString()}</dd>
+          <dt>End</dt>
+          <dd>{endDate?.toString()}</dd>
+        </dl>
+      </div>
       </main>
     )
   }
